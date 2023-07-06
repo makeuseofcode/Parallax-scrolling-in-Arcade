@@ -3,11 +3,6 @@ import arcade
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
 
-class Layer(arcade.SpriteList):
-    def __init__(self, scroll_speed):
-        super().__init__()
-        self.scroll_speed = scroll_speed
-
 class Player(arcade.Sprite):
     def __init__(self):
         super().__init__()
@@ -21,16 +16,19 @@ class Player(arcade.Sprite):
         self.center_x += self.change_x
         self.center_y += self.change_y
 
+class Layer(arcade.SpriteList):
+    def __init__(self, scroll_speed):
+        super().__init__()
+        self.scroll_speed = scroll_speed
+
 class Platform(arcade.Sprite):
-    def __init__(self, x, y, width, height,color):
+    def __init__(self, x, y, width, height, color):
         super().__init__()
         self.texture = arcade.make_soft_square_texture(width, color, outer_alpha=255)
         self.center_x = x
         self.center_y = y
         self.width = width
         self.height = height
-    
-
 
 class MyGame(arcade.Window):
     def __init__(self, width, height):
@@ -43,22 +41,29 @@ class MyGame(arcade.Window):
     def setup(self):
         self.player = Player()
         self.platforms = arcade.SpriteList()
-        self.platforms.append(Platform(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 100, 200, 20, arcade.color.YELLOW))
-        self.platforms.append(Platform(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 100, 200, 20, arcade.color.YELLOW))
+        gray = arcade.color.GRAY
+        red =  arcade.color.RED
+        brown = arcade.color.BROWN
+        yellow = arcade.color.YELLOW
 
-        background_layer = Layer(0.2)
-        background_layer.append(Platform(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2, 800, 600, arcade.color.GRAY))
-        self.layers.append(background_layer)
+        w = SCREEN_WIDTH // 2
+        h = SCREEN_HEIGHT // 2
 
-        midground_layer = Layer(0.5)
-        midground_layer.append(Platform(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 200, 400, 20, arcade.color.RED))
-        midground_layer.append(Platform(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 200, 400, 20, arcade.color.RED))
-        self.layers.append(midground_layer)
+        self.platforms.append(Platform(w, h - 100, 200, 20, yellow))
 
-        foreground_layer = Layer(1.0)
-        foreground_layer.append(Platform(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 300, 200, 20, arcade.color.BROWN))
-        foreground_layer.append(Platform(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 300, 200, 20, arcade.color.BROWN))
-        self.layers.append(foreground_layer)
+        self.platforms.append(Platform(w, h + 100, 200, 20, yellow))
+
+        layers_data = [
+            (Layer(0.2), Platform(w, h, 800, 600, gray)),
+            (Layer(0.5), Platform(w, h - 200, 400, 20, red)),
+            (Layer(0.5), Platform(w, h + 200, 400, 20, red)),
+            (Layer(1.0), Platform(w, h - 300, 200, 20, brown)),
+            (Layer(1.0), Platform(w, h + 300, 200, 20, brown))
+        ]
+
+        for layer, platform in layers_data:
+            layer.append(platform)
+            self.layers.append(layer)
 
     def on_draw(self):
         arcade.start_render()
@@ -71,7 +76,8 @@ class MyGame(arcade.Window):
         self.player.update()
         for layer in self.layers:
             for sprite in layer:
-                sprite.center_x -= self.player.change_x * layer.scroll_speed
+                change = self.player.change_x * layer.scroll_speed
+                sprite.center_x -= change
 
     def on_key_press(self, key, modifiers):
         if key == arcade.key.LEFT:
